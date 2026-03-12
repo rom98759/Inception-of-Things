@@ -1,6 +1,8 @@
 
 all: up
-	@echo "Cluster prêt. Test: http://127.0.0.1:8080"
+	@echo "Cluster prêt."
+	@echo "Ajoutez dans /etc/hosts: 127.0.0.1 app1.com app2.com app3.com"
+	@echo "Test: curl http://app1.com:8080 | curl http://app2.com:8080 | curl http://app3.com:8080"
 
 up:
 	vagrant up

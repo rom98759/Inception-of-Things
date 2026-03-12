@@ -1,20 +1,62 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nginx
+  name: app1
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: nginx
+      app: app1
   template:
     metadata:
       labels:
-        app: nginx
+        app: app1
     spec:
       containers:
-        - name: nginx
-          image: nginx:stable-alpine
-          imagePullPolicy: IfNotPresent
+        - name: app1
+          image: hashicorp/http-echo:latest
+          args: ["-text=Hello from App1"]
           ports:
-            - containerPort: 80
+            - containerPort: 5678
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app2
+  template:
+    metadata:
+      labels:
+        app: app2
+    spec:
+      containers:
+        - name: app2
+          image: hashicorp/http-echo:latest
+          args: ["-text=Hello from App2"]
+          ports:
+            - containerPort: 5678
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app3
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app3
+  template:
+    metadata:
+      labels:
+        app: app3
+    spec:
+      containers:
+        - name: app3
+          image: hashicorp/http-echo:latest
+          args: ["-text=Hello from App3"]
+          ports:
+            - containerPort: 5678
