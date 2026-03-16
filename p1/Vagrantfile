@@ -1,0 +1,27 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "debian/bullseye64"
+  name = `whoami`.strip
+
+  # libvirt configuration
+  config.vm.provider "libvirt" do |libvirt|
+    libvirt.memory = 2048
+    libvirt.cpus   = 2
+    libvirt.nested = true
+  end
+
+  # Eviter NFS/rsync: partage simple via 9p pour disposer de /vagrant
+  config.vm.synced_folder ".", "/vagrant", type: "9p"
+
+  config.vm.define "#{name}S" do |server|
+    server.vm.hostname = "#{name}S"
+    server.vm.network "private_network", ip: "192.168.56.110"
+    server.vm.network "forwarded_port", guest: 80, host: 8080
+    server.vm.provision "shell", path: "scripts/server.sh"
+  end
+
+  config.vm.define "#{name}SW" do |worker|
+    worker.vm.hostname = "#{name}SW"
+    worker.vm.network "private_network", ip: "192.168.56.111"
+    worker.vm.provision "shell", path: "scripts/worker.sh"
+  end
+end
