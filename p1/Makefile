@@ -1,3 +1,7 @@
+NAME = p1
+
+USERNAME := $(shell whoami)
+
 all: up
 
 up:
@@ -7,17 +11,20 @@ down:
 	vagrant halt
 
 clean:
-	vagrant destroy -f && rm -rf node-token .vagrant
+	${RM} k3s_token
 
-re: clean up
+fclean: clean
+	vagrant destroy -f
+	rm -rf .vagrant
+	vagrant global-status --prune
 
-status:
-	vagrant status
+s:
+	vagrant ssh $(USERNAME)S
 
-ssh-server:
-	vagrant ssh rcaillieS
+sw:
+	vagrant ssh $(USERNAME)SW
 
-ssh-worker:
-	vagrant ssh rcaillieSW
+label:
+	vagrant provision $(USERNAME)S --provision-with label-worker
 
-.PHONY: all up down clean re status ssh-server ssh-worker
+.PHONY: all up down s sw clean fclean

@@ -1,28 +1,24 @@
+NAME = p2
+
+USERNAME := $(shell whoami)
 
 all: up
-	@echo "Cluster prêt."
-	@echo "Ajoutez dans /etc/hosts: 127.0.0.1 app1.com app2.com app3.com"
-	@echo "Test: curl http://app1.com:8080 | curl http://app2.com:8080 | curl http://app3.com:8080"
+	echo "192.168.56.110 app1.com app2.com app3.com" | sudo tee -a "/etc/hosts"
 
 up:
 	vagrant up
 
-rebuild:
-	vagrant destroy -f && vagrant up
+down:
+	vagrant halt
 
-destroy:
+clean:
+	${RM} k3s_token
+
+fclean: clean
 	vagrant destroy -f
+	${RM} -rf .vagrant
 
-clean: destroy
-	rm -rf .vagrant node-token
+s:
+	vagrant ssh $(USERNAME)S
 
-status:
-	vagrant status
-
-ssh:
-	vagrant ssh master
-
-kubectl:
-	vagrant ssh master -c "sudo KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl get nodes,pods,svc,ingress -A"
-
-.PHONY: all up rebuild destroy clean status ssh kubectl
+.PHONY: all up down s clean fclean

@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app3
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app3
+  template:
+    metadata:
+      labels:
+        app: app3
+    spec:
+      containers:
+        - name: app3
+          image: hashicorp/http-echo:latest
+          args: ["-text=Hello from App3 pod: $(POD_ENV)"]
+          ports:
+            - containerPort: 5678
+          env:
+            - name: POD_ENV
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
