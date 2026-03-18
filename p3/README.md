@@ -56,28 +56,66 @@ ARGOCD_MANIFEST_URL="https://raw.githubusercontent.com/argoproj/argo-cd/v3.2.0/m
 ## Acces
 
 Le cluster expose le load balancer sur:
-- `http://localhost:8080`
-- `https://localhost:8443`
+- `http://localhost:8080` (HTTP)
+- `https://localhost:8443` (HTTPS)
 
-Ajoutez dans `/etc/hosts`:
+### Playground (Application)
 
-```text
-127.0.0.1 argocd.local playground.local
-```
+- **URL**: `http://localhost:8080/`
+- **Response**: `{"status":"ok", "message": "v1"}`
 
-Puis:
-- Argo CD: `http://argocd.local:8080`
-- App: `http://playground.local:8080`
+### Argo CD
+
+- **URL**: `https://localhost:8443/argocd`
+- **Route via Ingress**: `/argocd` → `argocd-server` service
+- Note: Argo CD applique une redirection TLS et utilise HTTPS
 
 ## Mot de passe admin Argo CD
 
 Le script `script/argocd.sh` affiche le mot de passe initial.
 
-Commande manuelle:
+Pour obtenir le mot de passe actuellement:
 
 ```bash
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d; echo
 ```
+
+## Configuration Argo CD pour GitOps
+
+### Probleme: Application non-synchronisee
+
+L'application Argo CD `playground` pointe vers `https://github.com/rom98759/Inception-of-Things.git`.
+Si le repo est prive, Argo CD ne peut pas y acceder sans credentials.
+
+### Solution 1: Configurer un Personal Access Token (recommande)
+
+```bash
+# Remplacez YOUR_GITHUB_TOKEN par votre token GitHub personnel
+kubectl create secret generic github-credentials \
+  -n argocd \
+  --from-literal=username=<username> \
+  --from-literal=password=YOUR_GITHUB_TOKEN \
+  --dry-run=client -o yaml | kubectl apply -f -
+
+# Enregistrez le repo dans Argo CD
+argocd repo add https://github.com/rom98759/Inception-of-Things.git \
+  --username <username> \
+  --password YOUR_GITHUB_TOKEN
+```
+
+### Solution 2: Faire le repo public sur GitHub
+
+Si votre fork est prive, mettez-le en public ou utilisez un repo public pour tests.
+
+### Solution 3: Deploiement manuel pour dev
+
+Pour l'instant, les manifests sont appliques manuellement via:
+
+```bash
+kubectl apply -f p3/confs/dev/workload/
+```
+
+Une fois les credentials configures, Argo CD synchronisera automatiquement les changements depuis Git.
 
 ## Verification
 
