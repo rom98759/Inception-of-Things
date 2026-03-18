@@ -15,8 +15,7 @@ if k3d cluster list | awk 'NR>1 {print $1}' | grep -qx "${CLUSTER_NAME}"; then
 else
 	k3d cluster create "${CLUSTER_NAME}" \
 		--agents "${AGENTS}" \
-		--port "8080:80@loadbalancer" \
-		--port "8443:443@loadbalancer"
+		--port "8080:80@loadbalancer"
 fi
 
 kubectl cluster-info

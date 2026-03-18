@@ -57,18 +57,22 @@ ARGOCD_MANIFEST_URL="https://raw.githubusercontent.com/argoproj/argo-cd/v3.2.0/m
 
 Le cluster expose le load balancer sur:
 - `http://localhost:8080` (HTTP)
-- `https://localhost:8443` (HTTPS)
+
+Ajoutez dans `/etc/hosts`:
+
+```text
+127.0.0.1 argocd.local playground.local
+```
 
 ### Playground (Application)
 
-- **URL**: `http://localhost:8080/`
+- **URL**: `http://playground.local:8080/`
 - **Response**: `{"status":"ok", "message": "v1"}`
 
 ### Argo CD
 
-- **URL**: `https://localhost:8443/argocd`
-- **Route via Ingress**: `/argocd` → `argocd-server` service
-- Note: Argo CD applique une redirection TLS et utilise HTTPS
+- **URL**: `http://argocd.local:8080/`
+- **Route via Ingress**: host `argocd.local` → `argocd-server` service
 
 ## Mot de passe admin Argo CD
 

@@ -6,12 +6,15 @@ metadata:
   namespace: argocd
   labels:
     app: argocd
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
 spec:
   ingressClassName: traefik
   rules:
-  - http:
+  - host: argocd.local
+    http:
       paths:
-      - path: /argocd
+      - path: /
         pathType: Prefix
         backend:
           service:

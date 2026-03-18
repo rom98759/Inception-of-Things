@@ -5,10 +5,13 @@ metadata:
   namespace: dev
   labels:
     app: playground
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
 spec:
   ingressClassName: traefik
   rules:
-  - http:
+  - host: playground.local
+    http:
       paths:
       - path: /
         pathType: Prefix

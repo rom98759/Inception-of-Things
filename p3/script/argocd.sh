@@ -17,6 +17,11 @@ kubectl wait --for=condition=Available deployment/argocd-server -n argocd --time
 kubectl wait --for=condition=Available deployment/argocd-repo-server -n argocd --timeout=240s
 kubectl wait --for=condition=Available deployment/argocd-applicationset-controller -n argocd --timeout=240s
 
+# Run argocd-server behind ingress without internal TLS to avoid redirect loops.
+kubectl patch configmap argocd-cmd-params-cm -n argocd --type merge -p '{"data":{"server.insecure":"true"}}'
+kubectl rollout restart deployment/argocd-server -n argocd
+kubectl wait --for=condition=Available deployment/argocd-server -n argocd --timeout=240s
+
 kubectl apply -f "${P3_DIR}/confs/argocd/ingress.yaml"
 
 echo "Argo CD initial admin password:"
