@@ -17,8 +17,8 @@ kubectl wait --for=condition=Available deployment/argocd-server -n argocd --time
 kubectl wait --for=condition=Available deployment/argocd-repo-server -n argocd --timeout=240s
 kubectl wait --for=condition=Available deployment/argocd-applicationset-controller -n argocd --timeout=240s
 
-# Run argocd-server behind ingress without internal TLS to avoid redirect loops.
-kubectl patch configmap argocd-cmd-params-cm -n argocd --type merge -p '{"data":{"server.insecure":"true"}}'
+# Run argocd-server behind ingress without internal TLS and serve on /argocd.
+kubectl patch configmap argocd-cmd-params-cm -n argocd --type merge -p '{"data":{"server.insecure":"true","server.rootpath":"/argocd","server.basehref":"/argocd"}}'
 kubectl rollout restart deployment/argocd-server -n argocd
 kubectl wait --for=condition=Available deployment/argocd-server -n argocd --timeout=240s
 

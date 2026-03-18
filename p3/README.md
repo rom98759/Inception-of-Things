@@ -58,21 +58,15 @@ ARGOCD_MANIFEST_URL="https://raw.githubusercontent.com/argoproj/argo-cd/v3.2.0/m
 Le cluster expose le load balancer sur:
 - `http://localhost:8080` (HTTP)
 
-Ajoutez dans `/etc/hosts`:
-
-```text
-127.0.0.1 argocd.local playground.local
-```
-
 ### Playground (Application)
 
-- **URL**: `http://playground.local:8080/`
+- **URL**: `http://localhost:8080/`
 - **Response**: `{"status":"ok", "message": "v1"}`
 
 ### Argo CD
 
-- **URL**: `http://argocd.local:8080/`
-- **Route via Ingress**: host `argocd.local` → `argocd-server` service
+- **URL**: `http://localhost:8080/argocd`
+- **Route via Ingress**: path `/argocd` → `argocd-server` service
 
 ## Mot de passe admin Argo CD
 
@@ -119,7 +113,7 @@ Pour l'instant, les manifests sont appliques manuellement via:
 kubectl apply -f p3/confs/dev/workload/
 ```
 
-Une fois les credentials configures, Argo CD synchronisera automatiquement les changements depuis Git.
+Une fois les credentials configures, vous pouvez reactiver l'autosync Argo CD si souhaite.
 
 ## Verification
 
