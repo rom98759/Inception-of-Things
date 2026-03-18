@@ -6,9 +6,9 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/rom98759/Inception-of-Things.git
+    repoURL: https://github.com/rom98759/iot-p3-rcaillie.git
     targetRevision: main
-    path: p3/confs/dev/workload
+    path: .
   destination:
     server: https://kubernetes.default.svc
     namespace: dev
