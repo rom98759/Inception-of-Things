@@ -15,8 +15,8 @@ clean:
 
 fclean: clean
 	vagrant destroy -f
-	rm -rf .vagrant
 	vagrant global-status --prune
+	rm -rf .vagrant
 
 s:
 	vagrant ssh $(USERNAME)S

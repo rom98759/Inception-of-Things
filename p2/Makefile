@@ -3,7 +3,7 @@ NAME = p2
 USERNAME := $(shell whoami)
 
 all: up
-	echo "192.168.56.110 app1.com app2.com app3.com" | sudo tee -a "/etc/hosts"
+	@echo "192.168.56.110 app1.com app2.com app3.com" | sudo tee -a "/etc/hosts"
 
 up:
 	vagrant up
@@ -16,6 +16,7 @@ clean:
 
 fclean: clean
 	vagrant destroy -f
+	vagrant global-status --prune
 	${RM} -rf .vagrant
 
 s:

@@ -2,31 +2,34 @@ Vagrant.configure("2") do |config|
   config.vm.box = "generic/debian12"
   node_prefix = `whoami`.strip
 
-  config.vm.provider "libvirt" do |libvirt|
-    libvirt.memory = 2048
-    libvirt.cpus = 2
-  end
-
   # Partage du dossier pour libvirt (NFSv4 TCP, UDP désactivé sur kernels récents)
   config.vm.synced_folder "./", "/vagrant", type: "nfs", nfs_udp: false, nfs_version: 4
 
   master_ip = "192.168.56.110"
+  agent_ip = "192.168.56.111"
+  worker_name = "#{node_prefix}sw"
 
-  (1..2).each do |i|
-    hostname = (i == 1) ? "#{node_prefix}S" : "#{node_prefix}SW"
-
-    config.vm.define hostname do |node|
-      node.vm.hostname = hostname
-      node.vm.network "private_network", ip: "192.168.56.#{109 + i}"
-      node_ip = "192.168.56.#{109 + i}"
-      worker_name = "#{node_prefix}sw"
-      if i == 1
-        node.vm.provision "shell", path: "./scripts/Server.sh", args: [node_ip]
-        node.vm.provision "shell", run: "never", name: "label-worker",
-          path: "./scripts/LabelWorker.sh", args: [worker_name]
-      else
-        node.vm.provision "shell", path: "./scripts/Worker.sh", args: [master_ip, node_ip]
-      end
+  config.vm.define "#{node_prefix}S" do |node|
+    node.vm.hostname = "#{node_prefix}S"
+    node.vm.provider "libvirt" do |libvirt|
+      libvirt.cpus = 2
+      libvirt.memory = 3072
     end
+    node.vm.network "private_network", ip: master_ip
+    node.vm.network "forwarded_port", guest: 80, host: 8080
+    node.vm.provision "shell", path: "./scripts/Server.sh", args: [master_ip]
+    node.vm.provision "shell", run: "never", name: "label-worker", path: "./scripts/LabelWorker.sh", args: [worker_name]
   end
+
+  config.vm.define "#{node_prefix}SW" do |node|
+    node.vm.hostname = "#{node_prefix}SW"
+    node.vm.provider "libvirt" do |libvirt|
+      libvirt.cpus = 2
+      libvirt.memory = 2048
+    end
+    node.vm.network "private_network", ip: agent_ip
+    node.vm.network "forwarded_port", guest: 80, host: 8080
+    node.vm.provision "shell", path: "./scripts/Worker.sh", args: [master_ip, agent_ip]
+  end
+
 end
