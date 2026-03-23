@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gitlab
+  namespace: gitlab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gitlab
+  template:
+    metadata:
+      labels:
+        app: gitlab
+    spec:
+      containers:
+        - name: gitlab
+          image: gitlab/gitlab-ce:latest
+          ports:
+            - containerPort: 80
+            - containerPort: 22
+          volumeMounts:
+            - name: gitlab-storage
+              mountPath: /var/opt/gitlab
+          env:
+            - name: GITLAB_OMNIBUS_CONFIG
+              value: |
+                external_url 'http://localhost/gitlab'
+                gitlab_rails['gitlab_relative_url_root'] = "/gitlab"
+      volumes:
+        - name: gitlab-storage
+          persistentVolumeClaim:
+            claimName: gitlab-volume
