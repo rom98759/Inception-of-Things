@@ -2,37 +2,53 @@
 
 set -euo pipefail
 
+LOG_STEP=0
+SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}" .sh | tr '[:lower:]' '[:upper:]')"
+exec 3>&1
+exec >/dev/null 2>&1
+
+log_info() {
+	LOG_STEP=$((LOG_STEP + 1))
+	printf '\033[36mINFO\033[0m\033[37m[%04d]\033[0m \033[36m[%s]\033[0m %s\n' "${LOG_STEP}" "${SCRIPT_NAME}" "$1" >&3
+}
+
+log_text() {
+	printf '%s\n' "$1" >&3
+}
+
+trap 'printf "\033[31mERROR\033[0m Echec a la ligne %s\n" "$LINENO" >&3' ERR
+
 if [[ "${EUID}" -eq 0 ]]; then
-	echo "Run this script as a regular user (sudo is used internally)."
+	log_text "Run this script as a regular user (sudo is used internally)."
 	exit 1
 fi
 
 if [[ ! -f /etc/os-release ]]; then
-	echo "Cannot detect OS release information."
+	log_text "Cannot detect OS release information."
 	exit 1
 fi
 
 . /etc/os-release
 
 if [[ "${ID}" != "debian" ]]; then
-	echo "Warning: this script is designed for Debian. Detected: ${ID}."
+	log_text "Warning: this script is designed for Debian. Detected: ${ID}."
 fi
 
 if [[ "${VERSION_CODENAME:-}" != "trixie" && "${VERSION_CODENAME:-}" != "bookworm" && "${VERSION_CODENAME:-}" != "bullseye" ]]; then
-	echo "Warning: Docker official support targets Debian trixie/bookworm/bullseye."
+	log_text "Warning: Docker official support targets Debian trixie/bookworm/bullseye."
 fi
 
-echo "[1/6] Install base packages"
+log_info "[1/6] Installation paquets de base"
 sudo apt update
 sudo apt install -y ca-certificates curl gnupg git
 
-echo "[2/6] Remove conflicting Docker packages if present"
+log_info "[2/6] Suppression paquets Docker en conflit"
 CONFLICTING="$(dpkg --get-selections docker.io docker-compose docker-doc podman-docker containerd runc 2>/dev/null | cut -f1 || true)"
 if [[ -n "${CONFLICTING}" ]]; then
 	sudo apt remove -y ${CONFLICTING}
 fi
 
-echo "[3/6] Configure Docker apt repository"
+log_info "[3/6] Configuration depot Docker"
 sudo install -m 0755 -d /etc/apt/keyrings
 sudo curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
 sudo chmod a+r /etc/apt/keyrings/docker.asc
@@ -46,17 +62,17 @@ Components: stable
 Signed-By: /etc/apt/keyrings/docker.asc
 EOF
 
-echo "[4/6] Install Docker Engine"
+log_info "[4/6] Installation Docker Engine"
 sudo apt update
 sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 sudo systemctl enable --now docker
 
 if ! groups "${USER}" | grep -q '\bdocker\b'; then
 	sudo usermod -aG docker "${USER}"
-	echo "User added to docker group. Re-login is required for group changes."
+	log_text "User added to docker group. Re-login is required for group changes."
 fi
 
-echo "[5/6] Install kubectl"
+log_info "[5/6] Installation kubectl"
 if ! command -v kubectl >/dev/null 2>&1; then
 	ARCH="$(dpkg --print-architecture)"
 	case "${ARCH}" in
@@ -65,7 +81,7 @@ if ! command -v kubectl >/dev/null 2>&1; then
 		armhf) KUBECTL_ARCH="arm" ;;
 		ppc64el) KUBECTL_ARCH="ppc64le" ;;
 		*)
-			echo "Unsupported architecture for kubectl auto-install: ${ARCH}"
+			log_text "Unsupported architecture for kubectl auto-install: ${ARCH}"
 			exit 1
 			;;
 	esac
@@ -79,12 +95,16 @@ if ! command -v kubectl >/dev/null 2>&1; then
 	rm -f /tmp/kubectl /tmp/kubectl.sha256
 fi
 
-echo "[6/6] Install k3d"
+log_info "[6/6] Installation k3d"
 if ! command -v k3d >/dev/null 2>&1; then
 	curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
 fi
 
-docker --version
-kubectl version --client
-k3d version
-echo "Dependencies are ready."
+docker_version="$(docker --version 2>/dev/null || true)"
+kubectl_version="$(kubectl version --client --short 2>/dev/null || kubectl version --client 2>/dev/null || true)"
+k3d_version="$(k3d version 2>/dev/null || true)"
+
+log_info "Dependencies are ready"
+log_text "${docker_version}"
+log_text "${kubectl_version}"
+log_text "${k3d_version}"
